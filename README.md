@@ -1,92 +1,91 @@
-# Chibchombia — Sistema Web de Domicilios de Restaurante
+# Chibchombia — Restaurant Delivery Ordering System
 
-Reconstrucción completa del proyecto final de Desarrollo de Aplicaciones Web,
-conservando la identidad **Chibchombia** (cocina de los Andes muiscas) y
-cumpliendo los requerimientos de la guía: menú interactivo con carrito,
-servicio web RESTful de captura de pedidos, y aplicación de gestión de
-pedidos con autenticación para el personal.
+A full rebuild of a final project for a Web Application Development course,
+keeping the **Chibchombia** brand (Andean muisca-inspired cuisine) while
+meeting all the functional requirements: an interactive menu with a
+shopping cart, a RESTful order-capture web service, and an order
+management application with staff authentication.
 
-## Estructura del proyecto
+## Project structure
 
-Las tres partes que pide la guía quedan separadas e identificadas en
-carpetas propias dentro de este mismo repositorio:
+The three deliverables required by the assignment are kept in clearly
+separated, identifiable folders within this same repository:
 
-```
 chibchombia/
-├── menu-cliente/        # 1) Menú del restaurante (front-end público)
-├── gestion-pedidos/      # 2) Aplicación de gestión de pedidos (front-end del personal)
-├── backend/               # 3) Servicio web / API RESTful + base de datos
-├── Dockerfile             # Empaqueta las tres partes en un solo contenedor
+├── menu-cliente/ # 1) Restaurant menu (public front-end)
+├── gestion-pedidos/ # 2) Order management app (staff front-end)
+├── backend/ # 3) Web service / RESTful API + database
+├── Dockerfile # Packages all three parts into a single container
 ├── docker-compose.yml
 └── .env.example
+
+## Architecture and technical decisions
+
+- **Backend:** Node.js + Express, layered architecture (`routes` →
+  `controllers` → `db`) with centralized error handling.
+- **Database:** SQLite through Node's native `node:sqlite` module (no
+  native dependencies to compile, which keeps the Docker build simple and
+  reproducible). Data persists through a volume.
+- **Authentication:** username/password with `bcryptjs` for password
+  hashing and JWT-based sessions (`jsonwebtoken`). Logging out invalidates
+  the token on the server side.
+- **Basic security:** passwords are never stored in plain text, login
+  attempts are rate-limited (`express-rate-limit`), CORS is controlled,
+  and order totals are always recalculated on the server (the client's
+  submitted total is never trusted).
+- **Front-end:** plain HTML/CSS/JS (no build step), just like the
+  original project, but restructured with real dynamic state and a
+  coherent visual identity (deep green, gold and terracotta palette,
+  Yeseva One + Work Sans typography).
+- **Everything in one container:** the same Express process serves the
+  API at `/api`, the menu at `/`, and order management at
+  `/gestion-pedidos`.
+
+## How each requirement is met
+
+| Requirement | Where it's implemented |
+|---|---|
+| Interactive menu loaded dynamically from the database | `GET /api/platos` + `menu-cliente/logica.js` |
+| Cart: add, remove, dynamic total | `menu-cliente/logica.js` (in-memory `carrito`, `renderizarCarrito`) |
+| Cart submits the order to a server | `POST /api/pedidos` |
+| RESTful web service available online | `backend/` (Express, `/api/*`) |
+| Order-capture endpoint that saves to the database | `POST /api/pedidos` → `pedidos` and `pedido_items` tables |
+| Front-end client to query orders | `gestion-pedidos/` |
+| Authentication with login/logout | `POST /api/auth/login`, `POST /api/auth/logout` |
+| Query orders by status | `GET /api/pedidos?estado=pendiente\|atendido` |
+| Query orders by customer | `GET /api/pedidos?cliente=<name>` |
+| Change status from pending to attended | `PATCH /api/pedidos/:id/estado` |
+
+## Running with Docker
+
+1. Copy the environment variables file and adjust it (especially
+   `JWT_SECRET` and `ADMIN_PASSWORD`):
+
+```bash
+   cp backend/.env.example .env
 ```
 
-## Arquitectura y decisiones técnicas
+2. Build and start the container:
 
-- **Backend:** Node.js + Express, con arquitectura en capas (`routes` →
-  `controllers` → `db`) y manejo centralizado de errores.
-- **Base de datos:** SQLite a través del módulo nativo `node:sqlite` de
-  Node.js (sin dependencias nativas que compilar, lo que hace el build de
-  Docker más simple y reproducible). Los datos persisten en un volumen.
-- **Autenticación:** usuario/contraseña con `bcryptjs` para el hash de la
-  contraseña y sesiones con JWT (`jsonwebtoken`). El cierre de sesión
-  invalida el token del lado del servidor.
-- **Seguridad básica:** contraseñas nunca en texto plano, límite de
-  intentos de login (`express-rate-limit`), CORS controlado, precios de
-  pedidos recalculados siempre en el servidor (nunca se confía en el
-  total enviado por el cliente).
-- **Front-end:** HTML/CSS/JS puro (sin build step), igual que el proyecto
-  original, pero reestructurado, con estado dinámico real y una
-  identidad visual coherente (verde profundo, oro y terracota, tipografía
-  Yeseva One + Work Sans).
-- **Todo en un contenedor:** el mismo proceso Express sirve la API en
-  `/api`, el menú en `/` y la gestión de pedidos en `/gestion-pedidos`.
-
-## Cómo se cumple cada requerimiento
-
-| Requerimiento de la guía | Dónde se implementa |
-|---|---|
-| Menú interactivo cargado dinámicamente desde la BD | `GET /api/platos` + `menu-cliente/logica.js` |
-| Carrito: agregar, eliminar, total dinámico | `menu-cliente/logica.js` (`carrito` en memoria, `renderizarCarrito`) |
-| Carrito envía el pedido a un servidor | `POST /api/pedidos` |
-| Servicio web RESTful disponible en línea | `backend/` (Express, `/api/*`) |
-| Endpoint de captura de pedidos que guarda en BD | `POST /api/pedidos` → tablas `pedidos` y `pedido_items` |
-| Cliente front-end para consultar pedidos | `gestion-pedidos/` |
-| Autenticación con inicio/cierre de sesión | `POST /api/auth/login`, `POST /api/auth/logout` |
-| Consultar pedidos por estado | `GET /api/pedidos?estado=pendiente\|atendido` |
-| Consultar pedidos por cliente | `GET /api/pedidos?cliente=<nombre>` |
-| Cambiar estado pendiente → atendido | `PATCH /api/pedidos/:id/estado` |
-
-## Ejecutar con Docker
-
-1. Copia el archivo de variables de entorno y ajústalo (sobre todo
-   `JWT_SECRET` y `ADMIN_PASSWORD`):
-
-   ```bash
-   cp backend/.env.example .env
-   ```
-
-2. Construye y levanta el contenedor:
-
-   ```bash
+```bash
    docker compose up --build
-   ```
+```
 
-3. Abre:
-   - Menú de clientes: <http://localhost:3000/>
-   - Gestión de pedidos: <http://localhost:3000/gestion-pedidos>
-   - Salud de la API: <http://localhost:3000/api/salud>
+3. Open:
+   - Customer menu: <http://localhost:3000/>
+   - Order management: <http://localhost:3000/gestion-pedidos>
+   - API health check: <http://localhost:3000/api/salud>
 
-   Inicia sesión en la gestión de pedidos con el usuario y contraseña
-   definidos en `.env` (`ADMIN_USER` / `ADMIN_PASSWORD`; por defecto
-   `admin` / `chibchombia2024`, se crea automáticamente la primera vez
-   que arranca el sistema).
+   Log in to order management with the username and password set in
+   `.env` (`ADMIN_USER` / `ADMIN_PASSWORD`; defaults to `admin` /
+   `chibchombia2024`, created automatically the first time the system
+   starts).
 
-Los datos (menú y pedidos) se guardan en el volumen `chibchombia_data`,
-así que sobreviven a `docker compose down` (usa `docker compose down -v`
-si quieres empezar desde cero).
+Data (menu and orders) is stored in the `chibchombia_data` volume, so it
+survives `docker compose down` (use `docker compose down -v` if you want
+to start from scratch).
 
-### Sin Docker (desarrollo local)
+### Without Docker (local development)
 
 ```bash
 cd backend
@@ -95,29 +94,29 @@ npm install
 npm start
 ```
 
-Requiere Node.js **22.13+** (se usa `node:sqlite`, incluido en Node sin
-necesidad de flags desde esa versión).
+Requires Node.js **22.13+** (uses `node:sqlite`, bundled with Node without
+needing flags since that version).
 
-## Referencia rápida de la API
+## API quick reference
 
-| Método | Ruta | Auth | Descripción |
+| Method | Route | Auth | Description |
 |---|---|---|---|
-| GET | `/api/platos` | No | Lista el menú disponible |
-| POST | `/api/platos` | Sí | Crea un plato |
-| PUT | `/api/platos/:id` | Sí | Edita un plato |
-| DELETE | `/api/platos/:id` | Sí | Elimina un plato |
-| POST | `/api/pedidos` | No | Captura un pedido desde el carrito |
-| GET | `/api/pedidos?estado=&cliente=` | Sí | Lista pedidos, filtrables |
-| PATCH | `/api/pedidos/:id/estado` | Sí | Cambia el estado del pedido |
-| POST | `/api/auth/login` | No | Inicia sesión, devuelve un JWT |
-| POST | `/api/auth/logout` | Sí | Invalida el token actual |
+| GET | `/api/platos` | No | Lists the available menu |
+| POST | `/api/platos` | Yes | Creates a dish |
+| PUT | `/api/platos/:id` | Yes | Edits a dish |
+| DELETE | `/api/platos/:id` | Yes | Deletes a dish |
+| POST | `/api/pedidos` | No | Captures an order from the cart |
+| GET | `/api/pedidos?estado=&cliente=` | Yes | Lists orders, filterable |
+| PATCH | `/api/pedidos/:id/estado` | Yes | Changes the order's status |
+| POST | `/api/auth/login` | No | Logs in, returns a JWT |
+| POST | `/api/auth/logout` | Yes | Invalidates the current token |
 
-## Notas para la sustentación
+## Notes for the presentation
 
-- El código fuente original (`estilos.css`, `index.html`, `logica.js`
-  sin backend real) se mantuvo como referencia de estilo, pero todo el
-  sistema fue reescrito para cumplir arquitectura cliente-servidor,
-  autenticación y persistencia real en base de datos.
-- El repositorio está organizado para poder subirse directamente a
-  GitHub y desplegarse con `docker compose up` en cualquier servidor
-  que tenga Docker instalado.
+- The original source code (`estilos.css`, `index.html`, `logica.js`
+  with no real backend) was kept as a style reference, but the entire
+  system was rewritten to implement a proper client-server architecture,
+  authentication, and real database persistence.
+- The repository is organized to be pushed directly to GitHub and
+  deployed with `docker compose up` on any server that has Docker
+  installed.
