@@ -1,0 +1,15 @@
+services:
+  chibchombia:
+    build: .
+    image: chibchombia:latest
+    container_name: chibchombia
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - chibchombia_data:/app/backend/data
+
+volumes:
+  chibchombia_data:

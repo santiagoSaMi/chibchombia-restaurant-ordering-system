@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chibchombia — Domicilios</title>
+  <meta name="description" content="Menú interactivo y domicilios de Chibchombia, cocina andina muisca.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <a class="salto-enlace" href="#menu">Saltar al menú</a>
+
+  <header class="hero">
+    <div class="hero__contenido">
+      <h1 class="hero__titulo">Chibchombia</h1>
+      <p class="hero__subtitulo">Cocina de los Andes muiscas, directo a tu puerta.</p>
+    </div>
+    <div class="hero__patron" aria-hidden="true"></div>
+  </header>
+
+  <nav class="categorias" id="categorias" aria-label="Categorías del menú">
+    <button type="button" class="categorias__boton is-activa" data-categoria="Todos">Todos</button>
+    <button type="button" class="categorias__boton" data-categoria="Entrada">Entradas</button>
+    <button type="button" class="categorias__boton" data-categoria="Plato Principal">Platos fuertes</button>
+    <button type="button" class="categorias__boton" data-categoria="Bebida">Bebidas</button>
+    <button type="button" class="categorias__boton" data-categoria="Postre">Postres</button>
+  </nav>
+
+  <main id="menu">
+    <p id="estado-carga" class="estado-carga">Cargando el menú…</p>
+    <section id="lista-platos" class="platos-grid" aria-live="polite"></section>
+  </main>
+
+  <button id="boton-carrito" class="boton-carrito" type="button" aria-haspopup="dialog" aria-controls="panel-carrito" aria-expanded="false">
+    <span aria-hidden="true">Tu pedido</span>
+    <span id="carrito-contador" class="boton-carrito__contador">0</span>
+    <span id="carrito-total-boton" class="boton-carrito__total">$ 0</span>
+  </button>
+
+  <div id="fondo-carrito" class="fondo-carrito" hidden></div>
+
+  <aside id="panel-carrito" class="panel-carrito" aria-hidden="true" aria-label="Carrito de compras">
+    <div class="panel-carrito__encabezado">
+      <h2>Tu pedido</h2>
+      <button id="cerrar-carrito" class="cerrar-carrito" type="button" aria-label="Cerrar carrito">Cerrar</button>
+    </div>
+
+    <div id="lista-carrito" class="lista-carrito"></div>
+    <p id="carrito-vacio" class="carrito-vacio">Aún no has agregado platos. Explora el menú y arma tu pedido.</p>
+
+    <form id="form-pedido" class="form-pedido" novalidate>
+      <div class="campo">
+        <label for="nombre">Nombre completo</label>
+        <input type="text" id="nombre" name="nombre" required autocomplete="name" placeholder="Ej. Laura Gómez">
+      </div>
+      <div class="campo">
+        <label for="telefono">Teléfono</label>
+        <input type="tel" id="telefono" name="telefono" required autocomplete="tel" placeholder="Ej. 300 123 4567">
+      </div>
+      <div class="campo">
+        <label for="direccion">Dirección de entrega</label>
+        <input type="text" id="direccion" name="direccion" required autocomplete="street-address" placeholder="Ej. Calle 10 # 5-23, apto 301">
+      </div>
+
+      <div class="carrito-total">
+        <span>Total a pagar</span>
+        <strong id="total">$ 0</strong>
+      </div>
+
+      <button type="submit" id="boton-enviar" class="boton-enviar">Confirmar pedido</button>
+      <p id="mensaje-pedido" class="mensaje-pedido" role="status" aria-live="polite"></p>
+    </form>
+  </aside>
+
+  <footer class="pie">
+    <p>Chibchombia · Sistema de domicilios en línea</p>
+  </footer>
+
+  <script src="logica.js" defer></script>
+</body>
+</html>
